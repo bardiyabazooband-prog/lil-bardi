@@ -448,20 +448,17 @@ export default function HomePage() {
     <main onPointerDown={enableInteraction}>
       <audio
         ref={rideOrDieAudioRef}
-        preload="auto"
+        src={rideOrDieAudio}
+        preload="metadata"
         onTimeUpdate={updateRideOrDieProgress}
         onEnded={resetRideOrDieAudio}
         onPause={() => setPlaying(false)}
         onPlay={() => setPlaying(true)}
         onError={() => {
-          console.error("Ride or Die audio file failed to load.");
           setAudioError(true);
           setPlaying(false);
         }}
-      >
-        <source src="/audios/ride-or-die.mp3" type="audio/mpeg" />
-        Your browser does not support audio playback.
-      </audio>
+      />
 
       <section className="hero">
         <div className="hero-grid" />

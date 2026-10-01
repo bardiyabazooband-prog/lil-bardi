@@ -67,7 +67,7 @@ export default function Hero({ latestRelease }) {
               transition={{ delay: 0.58, duration: 0.65, ease: EASE }}
               className="flex flex-col gap-4 border-l-2 border-pink pl-5"
             >
-              <p className="type-label text-ink/45">CURRENT FREQUENCY / SINGLE 01</p>
+              <p className="type-label text-ink/45">CURRENT FREQUENCY / LATEST</p>
 
               <p className="type-display text-[clamp(2.1rem,7vw,4rem)] text-ink">
                 {releaseTitle}

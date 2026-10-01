@@ -61,7 +61,7 @@ export default async function HomePage() {
         <div className="relative mx-auto max-w-6xl px-5 py-16 sm:px-8 sm:py-20 lg:py-28">
           <div className="flex flex-wrap items-center justify-between gap-4">
             <SectionLabel index="02" className="min-w-[16rem] flex-1">
-              RELEASE CLIMATE / 2026
+              RELEASE CLIMATE
             </SectionLabel>
 
             <Link

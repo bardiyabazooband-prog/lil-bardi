@@ -17,7 +17,7 @@ export const revalidate = 3600;
 export const metadata = {
   title: "About",
   description:
-    "Who is Lil Bardi — the artist identity, the sound, and the current era behind Ride or Die and Foreign Season.",
+    "Who is Lil Bardi — the artist identity, the sound, and the current era.",
 };
 
 export default async function AboutPage() {
@@ -96,7 +96,7 @@ export default async function AboutPage() {
                   />
 
                   <span className="type-label absolute bottom-3 left-3 rounded-full bg-cloud/90 px-3 py-2 text-ink">
-                    CURRENT ERA / 2026
+                    CURRENT ERA
                   </span>
                 </div>
               </Reveal>

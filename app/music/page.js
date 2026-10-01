@@ -20,7 +20,7 @@ export const revalidate = 3600;
 export const metadata = {
   title: "Music",
   description:
-    "Listen to Lil Bardi — Ride or Die, Foreign Season, and the full catalog, plus every streaming platform in one place.",
+    "Listen to Lil Bardi — the full catalog and every streaming platform in one place.",
 };
 
 const PLATFORMS = [

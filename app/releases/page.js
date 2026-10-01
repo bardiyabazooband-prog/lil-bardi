@@ -18,7 +18,7 @@ export const revalidate = 3600;
 export const metadata = {
   title: "Releases",
   description:
-    "The complete Lil Bardi catalog — Ride or Die, Foreign Season, Rarri, Loaded Up, Racks in the Safe, and Calibaby.",
+    "The complete Lil Bardi catalog — singles, EPs, and albums, all in one place.",
 };
 
 export default async function ReleasesPage() {

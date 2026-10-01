@@ -34,13 +34,13 @@ export const metadata = {
     template: "%s — Lil Bardi",
   },
   description: SITE.description,
-  keywords: ["Lil Bardi", "Ride or Die", "Foreign Season", "rap", "new music"],
+  keywords: ["Lil Bardi", "rap", "new music", "hip hop"],
   openGraph: {
     type: "website",
     title: "Lil Bardi — Official Digital World",
     description: SITE.description,
     siteName: "Lil Bardi",
-    images: [{ url: "/Rideordie.png", width: 1000, height: 1000, alt: "Ride or Die by Lil Bardi" }],
+    images: [{ url: "/Rideordie.png", width: 1000, height: 1000, alt: "Lil Bardi" }],
   },
   twitter: {
     card: "summary_large_image",

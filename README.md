@@ -14,7 +14,7 @@ Live sections: home, `/music`, `/releases`, `/releases/[slug]`, `/videos`, `/abo
 | Motion     | Framer Motion (client components only)                    |
 | Icons      | lucide-react (UI), react-icons/fa6 (brand glyphs)         |
 | Fonts      | Anton, Space Grotesk, IBM Plex Mono via `next/font/google` |
-| Data       | YouTube Data API v3 + Spotify Web API (server-side only)   |
+| Data       | YouTube Data API v3 + iTunes Search API (server-side only)  |
 
 ## Getting started
 
@@ -40,18 +40,16 @@ Create `.env.local` (git-ignored — never commit it):
 YOUTUBE_API_KEY=your_api_key
 YOUTUBE_CHANNEL_ID=UCxxxxxxxxxxxxxxxxxxxxxx
 YOUTUBE_CHANNEL_HANDLE=officiallilbardi   # optional, resolves the channel ID from the handle
-SPOTIFY_CLIENT_ID=your_spotify_client_id
-SPOTIFY_CLIENT_SECRET=your_spotify_client_secret
-SPOTIFY_ARTIST_ID=0ece3eqURp6ZSahMp2J7pq
+ITUNES_ARTIST_ID=1857068454
 ```
 
 Security notes:
 
 - All keys are **server-only**. There are deliberately no `NEXT_PUBLIC_` prefixed versions.
-- `lib/youtube.js`, `lib/spotify.js`, and `lib/catalog.js` all import `server-only`, so importing them from a client component is a build error.
-- Keys are never logged. If Spotify is unconfigured or fails, the catalog falls back to the static data in `lib/site.js`.
+- `lib/youtube.js`, `lib/itunes.js`, and `lib/catalog.js` all import `server-only`, so importing them from a client component is a build error.
+- Keys are never logged. If iTunes is unconfigured or fails, the catalog falls back to the static data in `lib/site.js`.
 
-Get a YouTube API key from the [Google Cloud Console](https://console.cloud.google.com/) with the YouTube Data API v3 enabled. Get Spotify credentials from the [Spotify Developer Dashboard](https://developer.spotify.com/dashboard).
+Get a YouTube API key from the [Google Cloud Console](https://console.cloud.google.com/) with the YouTube Data API v3 enabled. The iTunes Search API is free and requires no credentials.
 
 ## Project structure
 
@@ -66,13 +64,13 @@ app/
   about/page.js                # artist profile
   not-found.js                 # 404
   api/youtube/videos/route.js  # server route, ?limit=1..24, revalidates hourly
-  api/spotify/releases/route.js # server route, returns merged catalog, revalidates hourly
+  api/itunes/releases/route.js  # server route, returns merged catalog, revalidates hourly
   globals.css                  # Tailwind import + @theme tokens + a few utilities
 components/                    # Navbar, MobileMenu, AudioPlayer, ReleaseCard, VideoGrid, …
 lib/
   site.js                      # SITE, NAV_LINKS, SOCIALS, RELEASES (editorial overrides + static fallback)
-  catalog.js                   # server-only: merges Spotify data with editorial overrides
-  spotify.js                   # server-only: Spotify Web API client (Client Credentials flow)
+  catalog.js                   # server-only: merges iTunes data with editorial overrides
+  itunes.js                   # server-only: iTunes Search API client (free, no auth)
   youtube.js                   # server-only YouTube client
   format.js  motion.js
 public/
@@ -107,13 +105,47 @@ Low-volume UI sounds (hover, tap, nav) are **off by default**. `SoundProvider` p
 
 ## Content
 
-Release data, socials and the smart link are centralised in `lib/site.js`. Adding a release there automatically produces a catalog card, a timeline row, and a statically generated `/releases/<slug>` page. Releases without cover art fall back to a generated typographic sleeve (`components/ReleaseArt.jsx`) rather than a broken image path.
+Release data, socials and the smart link are centralised in `lib/site.js`. The release catalog is **automatically synced from iTunes/Apple Music** — when a new release drops, it appears on the site within an hour without any manual updates.
+
+### How the catalog sync works
+
+| Layer | File | Role |
+| ------ | ---- | ---- |
+| iTunes client | `lib/itunes.js` | Server-only. Fetches the artist's discography via the free iTunes Search API (no auth needed). |
+| Catalog merger | `lib/catalog.js` | Server-only. Merges iTunes data with editorial overrides from `lib/site.js`. |
+| Editorial overrides | `lib/site.js` | Hand-curated blurbs, accents, catalog numbers, and audio previews for known releases. |
+| Revalidation API | `app/api/itunes/releases/route.js` | Endpoint that returns the merged catalog; cached for 1 hour. |
+
+When `ITUNES_ARTIST_ID` is set, `lib/catalog.js` fetches the full discography, merges it with any editorial overrides (matched by slug or iTunes collection ID), and sorts newest-first. Releases without editorial overrides get sensible defaults: a generated slug, a cycling accent color, a catalog reference, and a generic blurb. New releases appear automatically on the home page, releases page, music page, and as on-demand `/releases/<slug>` pages.
+
+When iTunes is not configured (no env var) or the API fails, the static catalog in `lib/site.js` is used as a fallback so the site always renders.
+
+To add editorial flair to a new release (custom blurb, accent, audio preview), add an entry to the `RELEASES` array in `lib/site.js` with the matching slug. The merge will pick up your overrides automatically.
+
+Releases without cover art fall back to a generated typographic sleeve (`components/ReleaseArt.jsx`) rather than a broken image path.
+
+## iTunes setup
+
+The iTunes Search API is free and requires no credentials — no API key, no OAuth, no Premium subscription.
+
+1. Find your artist ID by searching iTunes:
+   `https://itunes.apple.com/search?term=lil+bardi&entity=song&limit=1`
+   The `artistId` field in the response is what you need (e.g. `1857068454`).
+   You can also find it in any Apple Music artist URL:
+   `https://music.apple.com/artist/lil-bardi/1857068454`
+2. Add it to `.env.local`:
+
+```bash
+ITUNES_ARTIST_ID=1857068454
+```
+
+That's it — new releases will appear on the site automatically within an hour of going live on Apple Music/iTunes. No rebuild or manual update needed.
 
 ## Accessibility & performance
 
 - Semantic landmarks, one `<h1>` per page, skip-to-content link, labelled icon buttons, keyboard-operable menu (Escape to close) and audio player.
 - `prefers-reduced-motion` disables animation globally.
-- Server Components by default; `"use client"` only where browser state is required. Images go through `next/image`, with remote patterns allowed for YouTube thumbnail hosts and Spotify album artwork (`i.scdn.co`).
+- Server Components by default; `"use client"` only where browser state is required. Images go through `next/image`, with remote patterns allowed for YouTube thumbnail hosts and iTunes/Apple Music artwork (`mzstatic.com`).
 
 ---
 

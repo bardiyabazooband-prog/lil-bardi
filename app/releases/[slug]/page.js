@@ -135,7 +135,7 @@ export default async function ReleasePage({ params }) {
               )}
 
               <div className="flex flex-wrap gap-3">
-                <MagneticButton href={release.spotifyUrl ?? SITE.smartLink} external tone="lime">
+                <MagneticButton href={release.itunesUrl ?? release.spotifyUrl ?? SITE.smartLink} external tone="lime">
                   LISTEN NOW
                 </MagneticButton>
 
@@ -193,7 +193,7 @@ export default async function ReleasePage({ params }) {
               </time>
 
               <a
-                href={release.spotifyUrl ?? SITE.smartLink}
+                href={release.itunesUrl ?? release.spotifyUrl ?? SITE.smartLink}
                 target="_blank"
                 rel="noreferrer"
                 className="type-label group mt-7 inline-flex items-center gap-2 text-ink transition-colors duration-300 hover:text-blue"

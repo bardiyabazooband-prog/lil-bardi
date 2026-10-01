@@ -1,14 +1,14 @@
 import { getCatalog } from "@/lib/catalog";
 
 /**
- * GET /api/spotify/releases
+ * GET /api/itunes/releases
  *
- * Server-side proxy for the Spotify Web API. Returns the merged catalog
- * (Spotify data + editorial overrides). The private Spotify credentials are
- * only ever read in lib/spotify.js and are never sent to the client.
+ * Server-side proxy for the iTunes Search API. Returns the merged catalog
+ * (iTunes data + editorial overrides). No credentials are needed — the
+ * iTunes Search API is public and unauthenticated.
  *
  * Can also be called by a cron job or webhook to trigger revalidation:
- *   fetch("/api/spotify/releases") // refreshes the cached data
+ *   fetch("/api/itunes/releases") // refreshes the cached data
  */
 export const revalidate = 3600;
 

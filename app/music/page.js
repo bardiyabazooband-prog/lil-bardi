@@ -166,7 +166,7 @@ export default async function MusicPage() {
                 ) : null}
 
                 <div className="flex flex-wrap gap-3">
-                  <MagneticButton href={latestRelease.spotifyUrl ?? SITE.smartLink} external tone="lime">
+                  <MagneticButton href={latestRelease.itunesUrl ?? latestRelease.spotifyUrl ?? SITE.smartLink} external tone="lime">
                     LISTEN EVERYWHERE
                   </MagneticButton>
 

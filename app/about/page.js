@@ -9,7 +9,10 @@ import SectionLabel from "@/components/SectionLabel";
 import SocialCards from "@/components/SocialCards";
 import Ticker from "@/components/Ticker";
 import { pad } from "@/lib/format";
-import { LATEST_RELEASE, RELEASES, SITE } from "@/lib/site";
+import { SITE } from "@/lib/site";
+import { getCatalog, getLatestRelease } from "@/lib/catalog";
+
+export const revalidate = 3600;
 
 export const metadata = {
   title: "About",
@@ -17,26 +20,31 @@ export const metadata = {
     "Who is Lil Bardi — the artist identity, the sound, and the current era behind Ride or Die and Foreign Season.",
 };
 
-const IDENTITY = [
-  {
-    label: "SOUND",
-    title: "Melodic pressure",
-    copy: "Hooks that stick on the first pass, low end built for a moving car, and writing that stays plain-spoken even when the production goes widescreen.",
-  },
-  {
-    label: "APPROACH",
-    title: "Release in seasons",
-    copy: "Music arrives in waves rather than one-offs — a run of singles, a project, then the next chapter. Every drop is part of a bigger picture.",
-  },
-  {
-    label: "CURRENT ERA",
-    title: "Ride or Die",
-    copy: "The newest chapter opens with Ride or Die on August 7, 2026 — the fastest, most confident version of the sound so far.",
-  },
-];
+export default async function AboutPage() {
+  const { releases } = await getCatalog();
+  const latestRelease = releases[0] ?? null;
+  const songs = releases.reduce((total, release) => total + release.tracks, 0);
+  const currentSingle = latestRelease?.title ?? "LIL BARDI";
 
-export default function AboutPage() {
-  const songs = RELEASES.reduce((total, release) => total + release.tracks, 0);
+  const IDENTITY = [
+    {
+      label: "SOUND",
+      title: "Melodic pressure",
+      copy: "Hooks that stick on the first pass, low end built for a moving car, and writing that stays plain-spoken even when the production goes widescreen.",
+    },
+    {
+      label: "APPROACH",
+      title: "Release in seasons",
+      copy: "Music arrives in waves rather than one-offs — a run of singles, a project, then the next chapter. Every drop is part of a bigger picture.",
+    },
+    {
+      label: "CURRENT ERA",
+      title: latestRelease?.title ?? "Lil Bardi",
+      copy: latestRelease
+        ? `The newest chapter opens with ${latestRelease.title} — ${latestRelease.blurb.toLowerCase()}`
+        : "The newest chapter is always loading. Stay tuned for the next transmission.",
+    },
+  ];
 
   return (
     <>
@@ -70,33 +78,35 @@ export default function AboutPage() {
               </Reveal>
             </h1>
 
-            <Reveal delay={0.2} className="relative">
-              <span
-                aria-hidden="true"
-                className="absolute -inset-4 rounded-full bg-magenta/25 blur-[70px]"
-              />
-
-              <div className="relative aspect-square w-full overflow-hidden rounded-3xl bg-ink ring-1 ring-ink/10">
-                <Image
-                  src={LATEST_RELEASE.image}
-                  alt="Ride or Die cover art by Lil Bardi"
-                  fill
-                  priority
-                  sizes="(max-width: 1024px) 88vw, 32vw"
-                  className="object-cover"
+            {latestRelease?.image ? (
+              <Reveal delay={0.2} className="relative">
+                <span
+                  aria-hidden="true"
+                  className="absolute -inset-4 rounded-full bg-magenta/25 blur-[70px]"
                 />
 
-                <span className="type-label absolute bottom-3 left-3 rounded-full bg-cloud/90 px-3 py-2 text-ink">
-                  CURRENT ERA / 2026
-                </span>
-              </div>
-            </Reveal>
+                <div className="relative aspect-square w-full overflow-hidden rounded-3xl bg-ink ring-1 ring-ink/10">
+                  <Image
+                    src={latestRelease.image}
+                    alt={`${latestRelease.title} cover art by Lil Bardi`}
+                    fill
+                    priority
+                    sizes="(max-width: 1024px) 88vw, 32vw"
+                    className="object-cover"
+                  />
+
+                  <span className="type-label absolute bottom-3 left-3 rounded-full bg-cloud/90 px-3 py-2 text-ink">
+                    CURRENT ERA / 2026
+                  </span>
+                </div>
+              </Reveal>
+            ) : null}
           </div>
         </div>
       </section>
 
       <Ticker
-        items={["LIL BARDI", "NEW SEASON", "RIDE OR DIE", "KEEP THE SIGNAL MOVING"]}
+        items={["LIL BARDI", "NEW SEASON", currentSingle.toUpperCase(), "KEEP THE SIGNAL MOVING"]}
         className="mt-6"
         label="Artist ticker"
       />
@@ -121,18 +131,22 @@ export default function AboutPage() {
               </p>
 
               <p>
-                <span className="font-semibold text-ink">Calibaby</span> opened the year with
-                four songs of California haze. <span className="font-semibold text-ink">Racks
-                in the Safe</span> and <span className="font-semibold text-ink">Loaded Up</span>{" "}
-                turned up the pressure through spring, and{" "}
-                <span className="font-semibold text-ink">Foreign Season</span> arrived in July
-                as the first full length statement — eight songs of altitude.
+                Music arrives in waves, and every release is part of a bigger picture.
+                The catalog keeps growing — check the releases page for the full timeline.
               </p>
 
               <p>
-                <span className="font-semibold text-ink">Ride or Die</span> is where the
-                current era begins. It is the clearest version of the Lil Bardi world so far:
-                melodic, confident, and built to keep the signal moving.
+                {latestRelease ? (
+                  <>
+                    <span className="font-semibold text-ink">{latestRelease.title}</span> is
+                    where the current era begins. It is the clearest version of the Lil Bardi
+                    world so far: melodic, confident, and built to keep the signal moving.
+                  </>
+                ) : (
+                  <>
+                    The next transmission is always loading. Stay on frequency.
+                  </>
+                )}
               </p>
             </div>
 
@@ -183,9 +197,9 @@ export default function AboutPage() {
 
           <dl className="mt-10 grid gap-8 sm:grid-cols-3">
             {[
-              { label: "RELEASES", value: pad(RELEASES.length) },
+              { label: "RELEASES", value: pad(releases.length) },
               { label: "SONGS", value: pad(songs) },
-              { label: "CURRENT SINGLE", value: "RIDE OR DIE" },
+              { label: "CURRENT SINGLE", value: currentSingle.toUpperCase() },
             ].map((item) => (
               <Reveal key={item.label}>
                 <div className="flex flex-col gap-3">

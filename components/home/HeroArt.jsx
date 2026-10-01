@@ -5,14 +5,18 @@ import { motion, useReducedMotion } from "framer-motion";
 
 import AudioPlayer from "@/components/AudioPlayer";
 import { EASE } from "@/lib/motion";
-import { LATEST_RELEASE } from "@/lib/site";
 
 /**
  * Hero artwork stage: orbiting rings, floating sleeve, animated shine,
- * catalog badge, and the Ride or Die preview player.
+ * catalog badge, and the latest release preview player.
  */
-export default function HeroArt() {
+export default function HeroArt({ latestRelease }) {
   const reduce = useReducedMotion();
+
+  const image = latestRelease?.image ?? null;
+  const title = latestRelease?.title ?? "Lil Bardi";
+  const catalog = latestRelease?.catalog ?? "LB / NEW";
+  const audio = latestRelease?.audio ?? null;
 
   return (
     <motion.div
@@ -49,14 +53,22 @@ export default function HeroArt() {
         className="relative"
       >
         <div className="group relative aspect-square w-full overflow-hidden rounded-[1.75rem] bg-ink shadow-[0_40px_80px_-40px_rgb(7_24_43_/_0.55)] ring-1 ring-ink/10 transition-transform duration-700 hover:scale-[1.02] hover:-rotate-1">
-          <Image
-            src={LATEST_RELEASE.image}
-            alt="Ride or Die cover art by Lil Bardi"
-            fill
-            priority
-            sizes="(max-width: 1024px) 90vw, 40vw"
-            className="object-cover"
-          />
+          {image ? (
+            <Image
+              src={image}
+              alt={`${title} cover art by Lil Bardi`}
+              fill
+              priority
+              sizes="(max-width: 1024px) 90vw, 40vw"
+              className="object-cover"
+            />
+          ) : (
+            <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-aqua via-cyan to-blue">
+              <span className="type-display text-ink text-[clamp(1.5rem,8cqw,4rem)] break-words px-4 text-center">
+                {title}
+              </span>
+            </div>
+          )}
 
           {/* Animated shine sweep */}
           <span
@@ -65,18 +77,20 @@ export default function HeroArt() {
           />
 
           <span className="type-label absolute bottom-3 left-3 rounded-full bg-cloud/90 px-3 py-2 text-ink backdrop-blur-sm">
-            {LATEST_RELEASE.catalog}
+            {catalog}
           </span>
         </div>
       </motion.div>
 
-      <div className="relative mx-auto -mt-5 w-[85%] max-w-xs sm:w-[78%]">
-        <AudioPlayer
-          src={LATEST_RELEASE.audio}
-          title={LATEST_RELEASE.title}
-          variant="pill"
-        />
-      </div>
+      {audio ? (
+        <div className="relative mx-auto -mt-5 w-[85%] max-w-xs sm:w-[78%]">
+          <AudioPlayer
+            src={audio}
+            title={title}
+            variant="pill"
+          />
+        </div>
+      ) : null}
     </motion.div>
   );
 }

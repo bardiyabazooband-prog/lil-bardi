@@ -10,7 +10,10 @@ import Reveal from "@/components/Reveal";
 import SectionLabel from "@/components/SectionLabel";
 import StatStrip from "@/components/StatStrip";
 import { pad } from "@/lib/format";
-import { LATEST_RELEASE, RELEASES, SITE } from "@/lib/site";
+import { SITE } from "@/lib/site";
+import { getCatalog, getLatestRelease } from "@/lib/catalog";
+
+export const revalidate = 3600;
 
 export const metadata = {
   title: "Releases",
@@ -18,13 +21,15 @@ export const metadata = {
     "The complete Lil Bardi catalog — Ride or Die, Foreign Season, Rarri, Loaded Up, Racks in the Safe, and Calibaby.",
 };
 
-const REST = RELEASES.slice(1);
+export default async function ReleasesPage() {
+  const { releases } = await getCatalog();
+  const latestRelease = releases[0] ?? null;
+  const rest = releases.slice(1);
 
-export default function ReleasesPage() {
-  const albums = RELEASES.filter((release) => release.type === "Album").length;
-  const eps = RELEASES.filter((release) => release.type === "EP").length;
-  const singles = RELEASES.filter((release) => release.type === "Single").length;
-  const songs = RELEASES.reduce((total, release) => total + release.tracks, 0);
+  const albums = releases.filter((release) => release.type === "Album").length;
+  const eps = releases.filter((release) => release.type === "EP").length;
+  const singles = releases.filter((release) => release.type === "Single").length;
+  const songs = releases.reduce((total, release) => total + release.tracks, 0);
 
   return (
     <>
@@ -69,7 +74,7 @@ export default function ReleasesPage() {
           <Reveal delay={0.26} className="mt-12">
             <StatStrip
               items={[
-                { label: "RELEASES", value: pad(RELEASES.length), note: `${songs} songs total` },
+                { label: "RELEASES", value: pad(releases.length), note: `${songs} songs total` },
                 { label: "PROJECTS", value: `${albums} ALBUM / ${eps} EP`, note: "Long-form work" },
                 { label: "SINGLES", value: pad(singles), note: "Standalone drops" },
               ]}
@@ -82,51 +87,53 @@ export default function ReleasesPage() {
       <section className="mx-auto max-w-6xl px-5 py-14 sm:px-8 sm:py-16">
         <SectionLabel index="01">MOST RECENT</SectionLabel>
 
-        <Reveal className="mt-8">
-          <Link
-            href={`/releases/${LATEST_RELEASE.slug}`}
-            className="group grid gap-7 rounded-3xl border border-ink/10 bg-white p-5 transition-colors duration-500 hover:border-blue/40 sm:p-7 lg:grid-cols-[0.42fr_1fr] lg:items-center lg:gap-10"
-          >
-            <ReleaseArt
-              release={LATEST_RELEASE}
-              priority
-              sizes="(max-width: 1024px) 88vw, 34vw"
-              className="transition-transform duration-500 group-hover:scale-[1.02]"
-            />
+        {latestRelease ? (
+          <Reveal className="mt-8">
+            <Link
+              href={`/releases/${latestRelease.slug}`}
+              className="group grid gap-7 rounded-3xl border border-ink/10 bg-white p-5 transition-colors duration-500 hover:border-blue/40 sm:p-7 lg:grid-cols-[0.42fr_1fr] lg:items-center lg:gap-10"
+            >
+              <ReleaseArt
+                release={latestRelease}
+                priority
+                sizes="(max-width: 1024px) 88vw, 34vw"
+                className="transition-transform duration-500 group-hover:scale-[1.02]"
+              />
 
-            <div className="flex flex-col gap-5">
-              <p className="type-label text-ink/45">
-                {LATEST_RELEASE.type.toUpperCase()} · OUT {LATEST_RELEASE.date.toUpperCase()}
-              </p>
+              <div className="flex flex-col gap-5">
+                <p className="type-label text-ink/45">
+                  {latestRelease.type.toUpperCase()} · OUT {latestRelease.date.toUpperCase()}
+                </p>
 
-              <h2 className="type-display text-[clamp(2.6rem,8vw,5.4rem)] text-ink transition-colors duration-300 group-hover:text-blue">
-                {LATEST_RELEASE.title}
-              </h2>
+                <h2 className="type-display text-[clamp(2.6rem,8vw,5.4rem)] text-ink transition-colors duration-300 group-hover:text-blue">
+                  {latestRelease.title}
+                </h2>
 
-              <p className="max-w-xl text-base text-ink/60 sm:text-lg">
-                {LATEST_RELEASE.blurb}
-              </p>
+                <p className="max-w-xl text-base text-ink/60 sm:text-lg">
+                  {latestRelease.blurb}
+                </p>
 
-              <span className="type-label inline-flex items-center gap-2 text-ink">
-                OPEN RELEASE
-                <ArrowUpRight
-                  size={15}
-                  aria-hidden="true"
-                  className="transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
-                />
-              </span>
-            </div>
-          </Link>
-        </Reveal>
+                <span className="type-label inline-flex items-center gap-2 text-ink">
+                  OPEN RELEASE
+                  <ArrowUpRight
+                    size={15}
+                    aria-hidden="true"
+                    className="transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
+                  />
+                </span>
+              </div>
+            </Link>
+          </Reveal>
+        ) : null}
       </section>
 
       {/* Full catalog grid */}
       <section className="border-t border-ink/10 bg-white">
         <div className="mx-auto max-w-6xl px-5 py-16 sm:px-8 sm:py-20">
-          <SectionLabel index="02">FULL CATALOG / {pad(RELEASES.length)}</SectionLabel>
+          <SectionLabel index="02">FULL CATALOG / {pad(releases.length)}</SectionLabel>
 
           <ul className="mt-10 grid gap-8 sm:grid-cols-2 lg:grid-cols-3 lg:gap-10">
-            {REST.map((release, index) => (
+            {rest.map((release, index) => (
               <li key={release.slug} className="h-full">
                 <ReleaseCard release={release} index={index + 1} />
               </li>
@@ -140,7 +147,7 @@ export default function ReleasesPage() {
         <SectionLabel index="03">RELEASE TIMELINE</SectionLabel>
 
         <ul className="mt-8 divide-y divide-ink/10 border-y border-ink/10">
-          {RELEASES.map((release, index) => (
+          {releases.map((release, index) => (
             <li key={release.slug}>
               <Link
                 href={`/releases/${release.slug}`}

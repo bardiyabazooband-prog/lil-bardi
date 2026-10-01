@@ -8,17 +8,24 @@ import ReleaseArt from "@/components/ReleaseArt";
 import Reveal from "@/components/Reveal";
 import SectionLabel from "@/components/SectionLabel";
 import Waveform from "@/components/Waveform";
-import { accentOf, getRelease, getReleaseNeighbours, RELEASES, SITE, SOCIALS } from "@/lib/site";
+import { accentOf, SITE, SOCIALS } from "@/lib/site";
+import { getCatalog, getRelease, getReleaseNeighbours } from "@/lib/catalog";
 
 const YOUTUBE = SOCIALS.find((social) => social.key === "youtube").href;
 
-export function generateStaticParams() {
-  return RELEASES.map((release) => ({ slug: release.slug }));
+export const revalidate = 3600;
+
+// Allow on-demand rendering for new Spotify releases not in the static set.
+export const dynamicParams = true;
+
+export async function generateStaticParams() {
+  const { releases } = await getCatalog();
+  return releases.map((release) => ({ slug: release.slug }));
 }
 
 export async function generateMetadata({ params }) {
   const { slug } = await params;
-  const release = getRelease(slug);
+  const release = await getRelease(slug);
 
   if (!release) return { title: "Release not found" };
 
@@ -35,12 +42,12 @@ export async function generateMetadata({ params }) {
 
 export default async function ReleasePage({ params }) {
   const { slug } = await params;
-  const release = getRelease(slug);
+  const release = await getRelease(slug);
 
   if (!release) notFound();
 
   const accent = accentOf(release.accent);
-  const { previous, next } = getReleaseNeighbours(slug);
+  const { previous, next } = await getReleaseNeighbours(slug);
 
   return (
     <>
@@ -128,7 +135,7 @@ export default async function ReleasePage({ params }) {
               )}
 
               <div className="flex flex-wrap gap-3">
-                <MagneticButton href={SITE.smartLink} external tone="lime">
+                <MagneticButton href={release.spotifyUrl ?? SITE.smartLink} external tone="lime">
                   LISTEN NOW
                 </MagneticButton>
 
@@ -186,7 +193,7 @@ export default async function ReleasePage({ params }) {
               </time>
 
               <a
-                href={SITE.smartLink}
+                href={release.spotifyUrl ?? SITE.smartLink}
                 target="_blank"
                 rel="noreferrer"
                 className="type-label group mt-7 inline-flex items-center gap-2 text-ink transition-colors duration-300 hover:text-blue"

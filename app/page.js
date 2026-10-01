@@ -4,6 +4,7 @@ import { ArrowUpRight } from "lucide-react";
 import AccentDot from "@/components/AccentDot";
 import FinalCta from "@/components/home/FinalCta";
 import Hero from "@/components/home/Hero";
+import HeroArt from "@/components/home/HeroArt";
 import LatestRelease from "@/components/home/LatestRelease";
 import ReleaseCard from "@/components/ReleaseCard";
 import Reveal from "@/components/Reveal";
@@ -12,14 +13,21 @@ import SocialCards from "@/components/SocialCards";
 import Ticker from "@/components/Ticker";
 import VideoGrid from "@/components/VideoGrid";
 import { formatCount } from "@/lib/format";
-import { RELEASES, SOCIALS } from "@/lib/site";
+import { SOCIALS } from "@/lib/site";
+import { getCatalog } from "@/lib/catalog";
 import { getChannelVideos } from "@/lib/youtube";
 
 const YOUTUBE = SOCIALS.find((social) => social.key === "youtube").href;
 
+export const revalidate = 3600;
+
 export default async function HomePage() {
   // Server-side fetch: the YouTube key never reaches the browser.
-  const { videos, channel, configured, error } = await getChannelVideos({ limit: 7 });
+  const { videos, channel, configured: ytConfigured, error: ytError } = await getChannelVideos({ limit: 7 });
+
+  // Dynamic catalog: releases are fetched from Spotify and merged with editorial overrides.
+  const { releases } = await getCatalog();
+  const latestRelease = releases[0] ?? null;
 
   const subscribers =
     channel && !channel.hiddenSubscriberCount ? formatCount(channel.subscribers) : null;
@@ -32,13 +40,14 @@ export default async function HomePage() {
     .filter(Boolean)
     .join(" / ");
 
+  const tickerItems = releases.slice(0, 3).map((r) => r.title.toUpperCase());
+  tickerItems.push("LIL BARDI", "KEEP THE SIGNAL MOVING");
+
   return (
     <>
-      <Hero />
+      <Hero latestRelease={latestRelease} />
 
-      <Ticker
-        items={["RIDE OR DIE", "FOREIGN SEASON", "LIL BARDI", "KEEP THE SIGNAL MOVING"]}
-      />
+      <Ticker items={tickerItems} />
 
       <LatestRelease />
 
@@ -79,15 +88,15 @@ export default async function HomePage() {
 
             <Reveal delay={0.08}>
               <p className="max-w-md text-base text-ink/60 sm:text-lg">
-                Six releases across singles, an EP, and a full length album — different
-                shades of the same frequency, built for motion.
+                {releases.length} releases across singles, an EP, and a full length album —
+                different shades of the same frequency, built for motion.
               </p>
             </Reveal>
           </div>
 
           {/* Constellation: staggered offsets on large screens */}
           <ul className="mt-12 grid gap-8 sm:grid-cols-2 lg:grid-cols-3 lg:gap-10">
-            {RELEASES.map((release, index) => (
+            {releases.map((release, index) => (
               <li
                 key={release.slug}
                 className={`h-full ${
@@ -147,8 +156,8 @@ export default async function HomePage() {
         <div className="mt-12">
           <VideoGrid
             videos={videos}
-            configured={configured}
-            error={error}
+            configured={ytConfigured}
+            error={ytError}
             channelUrl={channel?.url ?? YOUTUBE}
           />
         </div>

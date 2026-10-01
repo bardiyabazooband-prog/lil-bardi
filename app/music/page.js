@@ -12,7 +12,10 @@ import SectionLabel from "@/components/SectionLabel";
 import SocialIcon from "@/components/SocialIcon";
 import Waveform from "@/components/Waveform";
 import { pad } from "@/lib/format";
-import { LATEST_RELEASE, RELEASES, SITE, SOCIALS } from "@/lib/site";
+import { SITE, SOCIALS } from "@/lib/site";
+import { getCatalog, getLatestRelease } from "@/lib/catalog";
+
+export const revalidate = 3600;
 
 export const metadata = {
   title: "Music",
@@ -39,11 +42,21 @@ const PLATFORMS = [
   },
 ];
 
-const FEATURED = RELEASES.filter((release) =>
-  ["foreign-season", "calibaby", "rarri"].includes(release.slug),
-);
+function getFeatured(releases) {
+  // Try to match known slugs; fall back to the 2nd, 3rd, and 4th releases.
+  const slugs = ["foreign-season", "calibaby", "rarri"];
+  const matched = releases.filter((r) => slugs.includes(r.slug));
 
-export default function MusicPage() {
+  if (matched.length >= 2) return matched;
+
+  return releases.slice(1, 4);
+}
+
+export default async function MusicPage() {
+  const { releases } = await getCatalog();
+  const latestRelease = releases[0] ?? null;
+  const featured = getFeatured(releases);
+
   return (
     <>
       {/* Hero — listening focused, split composition */}
@@ -94,62 +107,76 @@ export default function MusicPage() {
 
         <div className="relative mx-auto max-w-6xl px-5 py-16 sm:px-8 sm:py-20 lg:py-24">
           <SectionLabel index="01" tone="light">
-            NOW PLAYING / SINGLE 01
+            NOW PLAYING / LATEST
           </SectionLabel>
 
-          <div className="mt-10 grid gap-10 lg:grid-cols-[0.7fr_1.3fr] lg:items-center lg:gap-14">
-            <Reveal x={-28} y={0} className="relative mx-auto w-full max-w-sm lg:mx-0">
-              <span
-                aria-hidden="true"
-                className="absolute inset-6 rounded-full bg-aqua/30 blur-[60px]"
-              />
-              <div className="relative aspect-square overflow-hidden rounded-3xl ring-1 ring-cloud/15">
-                <Image
-                  src={LATEST_RELEASE.image}
-                  alt="Ride or Die cover art by Lil Bardi"
-                  fill
-                  priority
-                  sizes="(max-width: 1024px) 80vw, 30vw"
-                  className="object-cover"
+          {latestRelease ? (
+            <div className="mt-10 grid gap-10 lg:grid-cols-[0.7fr_1.3fr] lg:items-center lg:gap-14">
+              <Reveal x={-28} y={0} className="relative mx-auto w-full max-w-sm lg:mx-0">
+                <span
+                  aria-hidden="true"
+                  className="absolute inset-6 rounded-full bg-aqua/30 blur-[60px]"
                 />
-              </div>
-            </Reveal>
+                <div className="relative aspect-square overflow-hidden rounded-3xl ring-1 ring-cloud/15">
+                  {latestRelease.image ? (
+                    <Image
+                      src={latestRelease.image}
+                      alt={`${latestRelease.title} cover art by Lil Bardi`}
+                      fill
+                      priority
+                      sizes="(max-width: 1024px) 80vw, 30vw"
+                      className="object-cover"
+                    />
+                  ) : (
+                    <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-aqua via-cyan to-blue">
+                      <span className="type-display text-ink text-[clamp(1.5rem,8cqw,4rem)] break-words px-4 text-center">
+                        {latestRelease.title}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </Reveal>
 
-            <Reveal delay={0.08} className="flex flex-col gap-6">
-              <div>
-                <p className="type-label text-cloud/45">OUT AUGUST 7, 2026</p>
-                <h2 className="type-display mt-3 text-[clamp(2.8rem,9vw,6rem)] text-cloud">
-                  Ride or Die
-                </h2>
-              </div>
+              <Reveal delay={0.08} className="flex flex-col gap-6">
+                <div>
+                  <p className="type-label text-cloud/45">
+                    OUT {latestRelease.date.toUpperCase()}
+                  </p>
+                  <h2 className="type-display mt-3 text-[clamp(2.8rem,9vw,6rem)] text-cloud">
+                    {latestRelease.title}
+                  </h2>
+                </div>
 
-              <p className="max-w-xl text-lg leading-relaxed text-cloud/70">
-                {LATEST_RELEASE.blurb}
-              </p>
+                <p className="max-w-xl text-lg leading-relaxed text-cloud/70">
+                  {latestRelease.blurb}
+                </p>
 
-              <Waveform tone="light" className="max-w-xl" />
+                <Waveform tone="light" className="max-w-xl" />
 
-              <div className="max-w-xl">
-                <AudioPlayer
-                  src={LATEST_RELEASE.audio}
-                  title="Ride or Die"
-                  subtitle="Preview clip"
-                  variant="panel"
-                  tone="dark"
-                />
-              </div>
+                {latestRelease.audio ? (
+                  <div className="max-w-xl">
+                    <AudioPlayer
+                      src={latestRelease.audio}
+                      title={latestRelease.title}
+                      subtitle="Preview clip"
+                      variant="panel"
+                      tone="dark"
+                    />
+                  </div>
+                ) : null}
 
-              <div className="flex flex-wrap gap-3">
-                <MagneticButton href={SITE.smartLink} external tone="lime">
-                  LISTEN EVERYWHERE
-                </MagneticButton>
+                <div className="flex flex-wrap gap-3">
+                  <MagneticButton href={latestRelease.spotifyUrl ?? SITE.smartLink} external tone="lime">
+                    LISTEN EVERYWHERE
+                  </MagneticButton>
 
-                <MagneticButton href="/releases/ride-or-die" tone="outlineLight">
-                  RELEASE DETAILS
-                </MagneticButton>
-              </div>
-            </Reveal>
-          </div>
+                  <MagneticButton href={`/releases/${latestRelease.slug}`} tone="outlineLight">
+                    RELEASE DETAILS
+                  </MagneticButton>
+                </div>
+              </Reveal>
+            </div>
+          ) : null}
         </div>
       </section>
 
@@ -234,7 +261,7 @@ export default function MusicPage() {
           </Reveal>
 
           <ul className="grid gap-8 sm:grid-cols-3">
-            {FEATURED.map((release, index) => (
+            {featured.map((release, index) => (
               <Reveal as="li" key={release.slug} delay={index * 0.07} className="h-full">
                 <Link
                   href={`/releases/${release.slug}`}

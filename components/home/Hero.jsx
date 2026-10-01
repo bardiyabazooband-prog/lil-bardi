@@ -10,13 +10,16 @@ import Orbs from "@/components/Orbs";
 import SocialIcon from "@/components/SocialIcon";
 import { useSound } from "@/components/SoundProvider";
 import { EASE, maskUp } from "@/lib/motion";
-import { LATEST_RELEASE, SITE, SOCIALS } from "@/lib/site";
+import { SITE, SOCIALS } from "@/lib/site";
 
 const WORDS = ["LIL", "BARDI"];
 
-export default function Hero() {
+export default function Hero({ latestRelease }) {
   const reduce = useReducedMotion();
   const { play } = useSound();
+
+  const releaseTitle = latestRelease?.title ?? "LIL BARDI";
+  const releaseDate = latestRelease?.date ?? "OUT NOW";
 
   return (
     <section className="relative overflow-hidden pt-28 pb-14 sm:pt-32 lg:pt-36 lg:pb-20">
@@ -67,10 +70,10 @@ export default function Hero() {
               <p className="type-label text-ink/45">CURRENT FREQUENCY / SINGLE 01</p>
 
               <p className="type-display text-[clamp(2.1rem,7vw,4rem)] text-ink">
-                {LATEST_RELEASE.title}
+                {releaseTitle}
               </p>
 
-              <p className="type-label text-blue">OUT AUGUST 7, 2026</p>
+              <p className="type-label text-blue">{releaseDate.toUpperCase()}</p>
             </motion.div>
 
             <motion.div
@@ -118,7 +121,7 @@ export default function Hero() {
           </div>
 
           {/* Art column */}
-          <HeroArt />
+          <HeroArt latestRelease={latestRelease} />
         </div>
 
         <motion.div

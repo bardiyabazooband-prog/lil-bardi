@@ -14,7 +14,7 @@ Live sections: home, `/music`, `/releases`, `/releases/[slug]`, `/videos`, `/abo
 | Motion     | Framer Motion (client components only)                    |
 | Icons      | lucide-react (UI), react-icons/fa6 (brand glyphs)         |
 | Fonts      | Anton, Space Grotesk, IBM Plex Mono via `next/font/google` |
-| Data       | YouTube Data API v3 (server-side only)                    |
+| Data       | YouTube Data API v3 + Spotify Web API (server-side only)   |
 
 ## Getting started
 
@@ -40,15 +40,18 @@ Create `.env.local` (git-ignored — never commit it):
 YOUTUBE_API_KEY=your_api_key
 YOUTUBE_CHANNEL_ID=UCxxxxxxxxxxxxxxxxxxxxxx
 YOUTUBE_CHANNEL_HANDLE=officiallilbardi   # optional, resolves the channel ID from the handle
+SPOTIFY_CLIENT_ID=your_spotify_client_id
+SPOTIFY_CLIENT_SECRET=your_spotify_client_secret
+SPOTIFY_ARTIST_ID=0ece3eqURp6ZSahMp2J7pq
 ```
 
 Security notes:
 
-- The key is **server-only**. There is deliberately no `NEXT_PUBLIC_YOUTUBE_API_KEY`.
-- `lib/youtube.js` imports `server-only`, so importing it from a client component is a build error.
-- Keys are never logged. If the API is unconfigured or fails, the video sections render an honest "archive loading" state instead of fake video IDs.
+- All keys are **server-only**. There are deliberately no `NEXT_PUBLIC_` prefixed versions.
+- `lib/youtube.js`, `lib/spotify.js`, and `lib/catalog.js` all import `server-only`, so importing them from a client component is a build error.
+- Keys are never logged. If Spotify is unconfigured or fails, the catalog falls back to the static data in `lib/site.js`.
 
-Get an API key from the [Google Cloud Console](https://console.cloud.google.com/) with the YouTube Data API v3 enabled.
+Get a YouTube API key from the [Google Cloud Console](https://console.cloud.google.com/) with the YouTube Data API v3 enabled. Get Spotify credentials from the [Spotify Developer Dashboard](https://developer.spotify.com/dashboard).
 
 ## Project structure
 
@@ -63,10 +66,13 @@ app/
   about/page.js                # artist profile
   not-found.js                 # 404
   api/youtube/videos/route.js  # server route, ?limit=1..24, revalidates hourly
+  api/spotify/releases/route.js # server route, returns merged catalog, revalidates hourly
   globals.css                  # Tailwind import + @theme tokens + a few utilities
 components/                    # Navbar, MobileMenu, AudioPlayer, ReleaseCard, VideoGrid, …
 lib/
-  site.js                      # SITE, NAV_LINKS, SOCIALS, RELEASES (single source of truth)
+  site.js                      # SITE, NAV_LINKS, SOCIALS, RELEASES (editorial overrides + static fallback)
+  catalog.js                   # server-only: merges Spotify data with editorial overrides
+  spotify.js                   # server-only: Spotify Web API client (Client Credentials flow)
   youtube.js                   # server-only YouTube client
   format.js  motion.js
 public/
@@ -107,7 +113,7 @@ Release data, socials and the smart link are centralised in `lib/site.js`. Addin
 
 - Semantic landmarks, one `<h1>` per page, skip-to-content link, labelled icon buttons, keyboard-operable menu (Escape to close) and audio player.
 - `prefers-reduced-motion` disables animation globally.
-- Server Components by default; `"use client"` only where browser state is required. Images go through `next/image`, with remote patterns allowed for YouTube thumbnail hosts.
+- Server Components by default; `"use client"` only where browser state is required. Images go through `next/image`, with remote patterns allowed for YouTube thumbnail hosts and Spotify album artwork (`i.scdn.co`).
 
 ---
 
